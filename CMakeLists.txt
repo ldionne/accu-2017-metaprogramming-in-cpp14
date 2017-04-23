@@ -36,7 +36,7 @@ ExternalProject_Add(install-Brigand EXCLUDE_FROM_ALL 1
     UPDATE_COMMAND ""    # Disable source work-tree update
 )
 ExternalProject_Get_Property(install-Brigand SOURCE_DIR)
-include_directories(${SOURCE_DIR})
+include_directories(${SOURCE_DIR}/include)
 
 include(ExternalProject)
 ExternalProject_Add(install-Metal EXCLUDE_FROM_ALL 1
