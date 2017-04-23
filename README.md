@@ -1,11 +1,12 @@
 ## Metaprogramming in C++14 and beyond
 
 This repository contains my [reveal.js][]-based presentation on metaprogramming
-for the March 2017 ACCU Bay Area C++ Meetup.
+for the [ACCU 2017][] conference.
 
 ## Basic usage
-Go to https://ldionne.com/accu-bay-area-meetup-03-2017 or open `index.html`
-with your browser. The slides are also available as a pdf in `slides.pdf`.
+Go to https://ldionne.com/accu-2017-metaprogramming-in-cpp14 or open
+`index.html` with your browser (does not work in Chrome). The slides
+are also available as a pdf in `slides.pdf`.
 
 ## Advanced usage
 From the root of the repository,
@@ -33,4 +34,5 @@ cmake .. -DCMAKE_CXX_COMPILER=path/to/custom/clang \
 ```
 
 <!-- Links -->
+[ACCU 2017]: https://conference.accu.org/site/stories/2017/schedule.html
 [reveal.js]: https://github.com/hakimel/reveal.js
