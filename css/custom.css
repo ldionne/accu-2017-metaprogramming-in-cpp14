@@ -1,0 +1,34 @@
+/* Make sure code appearing in headers is not capitalized */
+.reveal h1 code, .reveal h2 code, .reveal h3 code, .reveal h4 code {
+    text-transform: none;
+}
+
+/* Allow code boxes to be longer */
+.reveal pre code {
+    max-height: 550px;
+}
+
+/* Make it possible to have two columns */
+#left {
+  left:-8.33%;
+  text-align: center;
+  float: left;
+  width:50%;
+  z-index:-10;
+}
+
+#right {
+  left:31.25%;
+  top: 75px;
+  float: right;
+  text-align: center;
+  z-index:-10;
+  width:50%;
+}
+
+/* Remove the border and the background from images */
+.reveal section img {
+  background:none;
+  border:none;
+  box-shadow:none;
+}

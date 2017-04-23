@@ -1,0 +1,856 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>Metaprogramming in C++14 and beyond</title>
+        <meta name="author" content="Louis Dionne">
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/league.css" id="theme">
+        <link rel="stylesheet" href="css/custom.css">
+
+        <!-- Code syntax highlighting -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+    </head>
+
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section data-markdown=""
+                         data-separator="^====+$"
+                         data-separator-vertical="^----+$"
+                         data-notes="^Note:">
+                <script type="text/template">
+
+## Metaprogramming in C++14 and beyond
+### Louis Dionne
+
+==============================================================================
+
+## A bit of history
+
+Note:
+Discuss the beginnings of metaprogramming, Loki, MPL and Fusion
+
+====================
+
+### It all started with templates
+
+```c++
+template <typename T>
+struct vector { /* ... */ };
+
+int main() {
+  vector<int> ints = {1, 2, 3};
+  vector<string> strings = {"foo", "bar", "baz"};
+}
+```
+
+Note:
+Goal: generic containers and algorithms for the standard library
+
+----
+
+### We suspected they were hiding something more powerful
+
+----
+
+### It wasn't clear until someone came up with a very special program
+
+====================
+
+### March 1994, San Diego meeting
+### Erwin Unruh comes up with this:
+
+```c++
+template <int i> struct D { D(void*); operator int(); };
+
+template <int p, int i> struct is_prime {
+  enum { prim = (p%i) && is_prime<(i > 2 ? p : 0), i -1> :: prim };
+};
+
+template < int i > struct Prime_print {
+  Prime_print<i-1> a;
+  enum { prim = is_prime<i, i-1>::prim };
+  void f() { D<i> d = prim; }
+};
+
+struct is_prime<0,0> { enum {prim=1}; };
+struct is_prime<0,1> { enum {prim=1}; };
+struct Prime_print<2> { enum {prim = 1}; void f() { D<2> d = prim; } };
+#ifndef LAST
+#define LAST 10
+#endif
+main () { Prime_print<LAST> a; }
+```
+
+(source: http://www.erwin-unruh.de/primorig.html)
+
+----
+
+### It prints prime numbers at compile-time
+
+```
+P:\HC\D386_O> hc3 i primes.cpp -DLAST=30
+
+MetaWare High C/C++ Compiler R2.6
+(c) Copyright 1987-94, MetaWare Incorporated
+E "primes.cpp",L16/C63(#416):   prim
+|    Type `enum{}´ can´t be converted to txpe `D<2>´ [...]
+-- Detected during instantiation of Prime_print<30> [...]
+E "primes.cpp",L11/C25(#416):   prim
+|    Type `enum{}´ can´t be converted to txpe `D<3>´ [...]
+-- Detected during instantiation of Prime_print<30> [...]
+E "primes.cpp",L11/C25(#416):   prim
+|    Type `enum{}´ can´t be converted to txpe `D<5>´ [...]
+-- Detected during instantiation of Prime_print<30> [...]
+E "primes.cpp",L11/C25(#416):   prim
+|    Type `enum{}´ can´t be converted to txpe `D<7>´ [...]
+-- Detected during instantiation of Prime_print<30> [...]
+E "primes.cpp",L11/C25(#416):   prim
+|    Type `enum{}´ can´t be converted to txpe `D<11>´ [...]
+-- Detected during instantiation of Prime_print<30> [...]
+E "primes.cpp",L11/C25(#416):   prim
+|    Type `enum{}´ can´t be converted to txpe `D<13>´ [...]
+
+[...]
+```
+
+====================
+
+### Fast forward to 2001
+### Andrei Alexandrescu publishes Modern C++ Design
+
+----
+
+### Introduces the [Loki](http://loki-lib.sourceforge.net) library, which includes `Typelist`
+
+```c++
+template <class T, class U>
+struct Typelist {
+   typedef T Head;
+   typedef U Tail;
+};
+
+using Types = LOKI_TYPELIST_4(int, char, float, void);
+static_assert(std::is_same<
+    Loki::TL::TypeAt<Types, 2>::Result,
+    float
+>{});
+```
+
+----
+
+### Several algorithms on `Typelist` are provided
+
+```c++
+using Types = LOKI_TYPELIST_6(int, char, float, char, void, float);
+
+using NoChar = Loki::TL::EraseAll<Types, char>::Result;
+using Uniqued = Loki::TL::NoDuplicates<Types>::Result;
+using Reversed = Loki::TL::Reverse<Types>::Result;
+// etc...
+```
+
+----
+
+### The notion of compile-time algorithms and data structures starts to emerge
+
+====================
+
+### 2004
+### D. Abrahams and A. Gurtovoy publish the MPL book
+
+<span class="fragment">
+The book is actually called <br/>_C++ Template Metaprogramming: Concepts, Tools,
+and Techniques from Boost and Beyond_
+</span>
+
+----
+
+### It makes a thorough treatment of metaprogramming through the Boost MPL library
+
+----
+
+### The library contains several meta data structures
+
+- `boost::mpl::vector`
+- `boost::mpl::list`
+- `boost::mpl::map`
+- `boost::mpl::set`
+- `boost::mpl::string`
+
+----
+
+### It also provides several generic algorithms working on meta-iterators, like the STL
+
+- `boost::mpl::equal`
+- `boost::mpl::transform`
+- `boost::mpl::remove_if`
+- `boost::mpl::sort`
+- `boost::mpl::partition`
+- etc...
+
+----
+
+### For example
+
+<pre><code class='sample' sample='code/mpl.example.cpp#example'></code></pre>
+
+====================
+
+### 2008
+### J. de Guzman, D. Marsden and T. Schwinger release the Boost Fusion library
+
+Note:
+Fusion emerged from the need to manipulate heterogeneous collections in
+Spirit and Phoenix
+
+----
+
+### MPL allows manipulating types (at compile-time)
+### Fusion allows manipulating objects (at compile-time)
+
+Note:
+Fusion's job is to map type (MPL world) to real values, where they can be
+used at runtime (which is what we're interested in at the end).
+
+----
+
+### Like MPL, it provides data structures
+
+- `boost::fusion::vector`
+- `boost::fusion::list`
+- `boost::fusion::set`
+- `boost::fusion::map`
+
+----
+
+### And algorithms
+
+- `boost::fusion::remove_if`
+- `boost::fusion::find_if`
+- `boost::fusion::count_if`
+- `boost::fusion::transform`
+- `boost::fusion::reverse`
+- etc...
+
+----
+
+### For example
+
+<pre><code class='sample' sample='code/fusion.example.cpp#example'></code></pre>
+
+====================
+
+### BoostCon 2010
+### Matt Calabrese and Zach Laine present [Instantiations must go](https://youtu.be/x7UmrRzKAXU)
+
+----
+
+### They introduce a way of metaprogramming without angly brackets
+
+----
+
+### The idea is kinda shot down and nobody follows up
+### ...until Hana <!-- .element class="fragment" -->
+
+==============================================================================
+
+## What we can do today
+
+Note:
+Discuss libraries like Brigand and Hana
+
+====================
+
+### Some features make it easier and faster
+
+- Variadic templates
+- Alias templates
+
+----
+
+### Brigand
+
+<pre><code class='sample' sample='code/brigand.example.cpp#example'></code></pre>
+
+----
+
+### Metal
+
+<pre><code class='sample' sample='code/metal.example.cpp#example'></code></pre>
+
+====================
+
+### But other features completely change the picture
+
+- Function return type deduction
+- Generic lambdas
+- `decltype`
+
+Note:
+Mention that we can get better compile-time performance and error messages
+
+----
+
+### What is this "new picture"?
+
+----
+
+### Essentially: represent compile-time entities as objects
+
+====================
+
+### Integers
+
+<pre><code class='sample' sample='code/present.int.cpp#integral_constant'></code></pre>
+
+Note:
+`std::integral_constant` is just a way to represent compile-time integers as types.
+Let's represent them as objects and see what gives.
+
+----
+
+### Compile-time arithmetic: classic approach
+
+<pre><code class='sample' sample='code/present.int.cpp#operator-classic'></code></pre>
+
+----
+
+### But what about this?
+
+<pre><code class='sample' sample='code/present.int.cpp#operator-hana'></code></pre>
+
+----
+
+### Now, we can actually do more
+
+<pre><code class='sample' sample='code/present.int.cpp#literal-operator'></code></pre>
+
+====================
+
+### Manipulating types
+
+<pre><code class='sample' sample='code/present.type.cpp#operators'></code></pre>
+
+----
+
+### Usual function call syntax works
+
+Before
+<pre><code class='sample' sample='code/present.type.cpp#before'></code></pre>
+
+After
+<pre><code class='sample' sample='code/present.type.cpp#after'></code></pre>
+
+----
+
+### We can use tuples instead of type lists
+
+<pre><code class='sample' sample='code/present.type.cpp#typelist'></code></pre>
+
+----
+
+### Pays off for complex computations
+
+Before
+<pre><code class='sample' sample='code/benefit.lambda.cpp#mpl'></code></pre>
+
+After
+<pre><code class='sample' sample='code/benefit.lambda.cpp#hana'></code></pre>
+
+====================
+
+### Compile-time strings
+
+<pre><code class='sample' sample='code/present.string.cpp#string'></code></pre>
+
+----
+
+### How that works
+
+<pre><code class='sample' sample='code/present.string.cpp#how'></code></pre>
+
+====================
+
+### We can use this principle on any compile-time "thing"
+
+`std::ratio` comes to mind
+
+====================
+
+### Enter Hana
+
+- data structures like Boost.Fusion
+- algorithms like Boost.Fusion
+- a way to represent types as values
+
+----
+
+### All you need from MPL and Fusion in a single library
+
+----
+
+### Data structures
+
+- `boost::hana::tuple`
+- `boost::hana::map`
+- `boost::hana::set`
+
+----
+
+### Algorithms
+
+- `boost::hana::remove_if`
+- `boost::hana::find_if`
+- `boost::hana::count_if`
+- `boost::hana::transform`
+- `boost::hana::reverse`
+- etc...
+
+----
+
+### Utilities
+
+- `boost::hana::type`
+- `boost::hana::integral_constant`
+- `boost::hana::string`
+
+----
+
+### For example, MPL
+
+<pre><code class='sample' sample='code/hana.example.cpp#mpl'></code></pre>
+
+----
+
+### For example, Fusion
+
+<pre><code class='sample' sample='code/hana.example.cpp#fusion'></code></pre>
+
+====================
+
+### Let's consider a simple event system
+
+<pre><code class='sample' sample='code/callbacks.std.unordered_map.cpp#usage'></code></pre>
+
+----
+
+### What if
+
+- All events are known at compile-time
+- We always know what event to trigger at compile-time
+
+----
+
+### Could we do better?
+
+<pre><code class='sample' sample='code/callbacks.hana.cpp#usage'></code></pre>
+
+----
+
+### Runtime
+<pre><code class='sample' sample='code/callbacks.std.unordered_map.hpp#struct'></code></pre>
+
+### Compile-time
+<pre><code class='sample' sample='code/callbacks.hana.hpp#struct'></code></pre>
+
+----
+
+### Runtime
+<pre><code class='sample' sample='code/callbacks.std.unordered_map.hpp#constructor'></code></pre>
+
+### Compile-time
+<pre><code class='sample' sample='code/callbacks.hana.hpp#constructor'></code></pre>
+
+----
+
+### Runtime
+<pre><code class='sample' sample='code/callbacks.std.unordered_map.hpp#on'></code></pre>
+
+### Compile-time
+<pre><code class='sample' sample='code/callbacks.hana.hpp#on'></code></pre>
+
+----
+
+### Runtime
+<pre><code class='sample' sample='code/callbacks.std.unordered_map.hpp#trigger'></code></pre>
+
+### Compile-time
+<pre><code class='sample' sample='code/callbacks.hana.hpp#trigger'></code></pre>
+
+----
+
+### But does it actually matter?
+
+----
+
+### Compiled with `-O3 -flto`
+
+<iframe width="800" height="400" src="benchmark/callbacks.html" style="background-color: Snow;"></iframe>
+
+----
+
+### What if the event to trigger can be decided at runtime?
+
+<pre><code class='sample' sample='code/callbacks.hana.runtime.cpp#usage'></code></pre>
+
+----
+
+### First, maintain a dynamic map
+
+<pre><code class='sample' sample='code/callbacks.hana.hpp#construct-runtime'></code></pre>
+
+----
+
+### Then, overload `trigger`!
+
+<pre><code class='sample' sample='code/callbacks.hana.hpp#trigger-runtime'></code></pre>
+
+Note:
+This is what I meant by "Seamless integration of compile-time and runtime"
+
+----
+
+### And what about performance?
+
+<iframe width="800" height="400" src="benchmark/callbacks.runtime.html" style="background-color: Snow;"></iframe>
+
+----
+
+### Hana shines when combining compile-time and runtime
+
+====================
+
+## Another example
+
+----
+
+### Go interfaces
+### Haskell typeclasses
+### Rust traits
+### C++0x concept maps
+
+----
+
+### Name them however you'd like
+
+----
+
+```c++
+struct Square {
+  void draw(std::ostream& out) const { out << "Square"; }
+};
+
+struct Circle {
+  void draw(std::ostream& out) const { out << "Circle"; }
+};
+
+void f(drawable const& d) {
+  d.draw(std::cout);
+}
+
+f(Square{}); // prints "Square"
+f(Circle{}); // prints "Circle"
+```
+
+----
+
+```c++
+#include <dyno.hpp>
+#include <iostream>
+using namespace dyno::literals;
+
+// Define the interface of something that can be drawn
+struct Drawable : decltype(dyno::requires(
+  "draw"_s = dyno::function<void (dyno::T const&, std::ostream&)>
+)) { };
+
+// Define an object that can hold anything that can be drawn.
+struct drawable {
+  template <typename T>
+  drawable(T x) : poly_{x, dyno::make_concept_map(
+    "draw"_s = [](T const& self, std::ostream& out) { self.draw(out); }
+  )} { }
+
+  void draw(std::ostream& out) const
+  { poly_.virtual_("draw"_s)(poly_, out); }
+
+private:
+  dyno::poly<Drawable> poly_;
+};
+```
+
+----
+
+### Woah! How does it work?
+
+----
+
+### It's simple
+### No, not really <!-- .element class="fragment" -->
+
+----
+
+### But bits of it are
+### How we create the vtable
+
+```c++
+template <typename ...Name, typename ...Signature>
+auto requires(hana::pair<Name, hana::type<Signature>> ...f)
+  -> hana::map<hana::pair<Name, Signature>...>
+;
+
+using VTable = decltype(requires(
+  hana::make_pair(
+    "draw"_s,
+    hana::type<void (void const*, std::ostream&)>{}
+  )
+));
+```
+
+----
+
+### How we fill it
+
+```c++
+template <typename ...Name, typename ...Function>
+auto make_concept_map(hana::pair<Name, Function> ...f) {
+  return hana::make_map(f...);
+}
+
+template <typename T>
+auto functions = make_concept_map(
+  hana::make_pair(
+    "draw"_s,
+    [](T const& self, std::ostream& out) { self.draw(out); }
+  )
+);
+```
+
+----
+
+### How we bind the two together
+
+```c++
+struct drawable {
+  template <typename T>
+  drawable(T t) : vtable_{functions<T>}, ... { }
+
+  ...
+
+private:
+  VTable vtable_;
+  ...
+};
+```
+
+----
+
+### Then throw some nice DSL on top and you get this
+
+```c++
+struct Drawable : decltype(dyno::requires(
+  "draw"_s = dyno::function<void (dyno::T const&, std::ostream&)>
+)) { };
+
+struct drawable {
+  template <typename T>
+  drawable(T x) : poly_{x, dyno::make_concept_map(
+    "draw"_s = [](T const& self, std::ostream& out) { self.draw(out); }
+  )} { }
+
+  void draw(std::ostream& out) const
+  { poly_.virtual_("draw"_s)(poly_, out); }
+
+private:
+  dyno::poly<Drawable> poly_;
+};
+```
+
+==============================================================================
+
+## The future
+
+Note:
+Discuss how some language features could make Hana-style more expressive.
+Discuss additions to the standard library.
+
+====================
+
+### How would we want metaprogramming to look like?
+
+----
+
+### Consider serialization to JSON
+
+```c++
+struct point { float x, y, z; };
+struct triangle { point a, b, c; };
+
+struct tetrahedron {
+  triangle base;
+  point apex;
+};
+
+int main() {
+  tetrahedron t{
+    {{0.f,0.f,0.f}, {1.f,0.f,0.f}, {0.f,0.f,1.f}},
+    {0.f,1.f,0.f}
+  };
+
+  to_json(std::cout, t);
+}
+```
+
+----
+
+### Should output
+
+```
+{
+  "base": {
+    "a": {"x": 0, "y": 0, "z": 0},
+    "b": {"x": 1, "y": 0, "z": 0},
+    "c": {"x": 0, "y": 0, "z": 1}
+  },
+  "apex": {"x": 0, "y": 1, "z": 0}
+}
+```
+
+----
+
+### How to write this `to_json`?
+
+----
+
+### Easy with reflection and tuple for-loops
+#### Syntax TBD
+
+```c++
+template <typename T>
+std::ostream& to_json(std::ostream& out, T const& v) {
+  if constexpr (std::meta::Record(reflexpr(T))) {
+    out << "{";
+    constexpr auto members = reflexpr(T).members();
+    for constexpr (int i = 0; i != members.size(); ++i) {
+      if (i > 0) out << ", ";
+      out << '"' << members[i].name() << "\": ";
+      to_json(out, v.*members[i].pointer());
+    }
+    out << '}';
+  } else {
+    out << v;
+  }
+  return out;
+}
+```
+
+====================
+
+### The future of type-level computations?
+
+```c++
+constexpr std::vector<std::meta::type>
+sort_by_alignment(std::vector<std::meta::type> types) {
+  std::sort(v.begin(), v.end(), [](std::meta::type t,
+                                   std::meta::type u) {
+    return t.alignment() < u.alignment();
+  });
+  return v;
+}
+
+constexpr std::vector<std::meta::type> types{
+  reflexpr(Foo), reflexpr(Bar), reflexpr(Baz)
+};
+
+constexpr std::vector<std:meta::type> sorted = sort_by_alignment(types);
+
+std::tuple<typename(sorted)...> tuple{...};
+```
+
+====================
+
+## Metaprogramming is powerful
+
+----
+
+### We need more metaprogramming
+### But less _template_ &nbsp; metaprogramming
+
+----
+
+### Let's embrace this reality
+
+==============================================================================
+
+<img src="img/A9.png" alt="A9"/>
+
+https://a9.com/careers
+
+                </script>
+                </section>
+            </div>
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
+        <!-- Required for the sampler.js plugin -->
+        <script src="lib/js/jquery.min.js"></script>
+
+        <script>
+            Reveal.initialize({
+                slideNumber: false, // 'c/t' -> useful when authoring to know how many slides there are
+                history: true,
+                transition: 'none',
+
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+                    { src: 'plugin/math/math.js', async: true },
+                    { src: 'plugin/sampler/sampler.js' },
+                    { src: 'plugin/line-numbers/line-numbers.js' }
+                ]
+            });
+
+            // By marking a slide with <!-- .slide: data-state="ensure-sbs" -->,
+            // the presentation is re-scaled so that two side-by-side code
+            // snippets can fit. By using data-state="end-sbs", the
+            // presentation is scaled back to its original width.
+            // This is super hacky, but I suck at JavaScript.
+            Reveal.addEventListener('ensure-sbs', function() {
+              Reveal.configure({ width: '150%' });
+            }, false);
+
+            Reveal.addEventListener('end-sbs', function() {
+              Reveal.configure({ width: 960 });
+            }, false);
+
+            // Slides marked with <!-- .slide: class="skip" --> will
+            // be hidden from the presentation. This is handy for removing
+            // material that I think I won't have time to cover, but without
+            // removing the slide.
+            Reveal.addEventListener('ready', function(event) {
+              $(".slides .skip").each(function(index, slide) {
+                slide.remove();
+              });
+              Reveal.sync();
+            });
+        </script>
+    </body>
+</html>
