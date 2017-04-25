@@ -19,14 +19,16 @@ using namespace std::literals;
 
 
 int main() {
-// sample(example)
+// sample(vector)
 // vector
 auto vector = fusion::make_vector(1, 2.2f, "hello"s, 3.4, 'x');
 auto no_floats = fusion::remove_if<
                         std::is_floating_point<mpl::_>>(vector);
 
 assert(no_floats == fusion::make_vector(1, "hello"s, 'x'));
+// end-sample
 
+// sample(map)
 // map
 struct a; struct b; struct c;
 auto map = fusion::make_map<a, b, c>(1, 'x', "hello"s);

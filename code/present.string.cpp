@@ -22,7 +22,7 @@ constexpr auto operator+(string<c1...>, string<c2...>) {
 // end-sample
 
 // sample(string)
-constexpr auto Hello_world = "hello"_s + " world"_s;
+auto Hello_world = "hello"_s + " world"_s;
 static_assert(Hello_world == "hello world"_s);
 // end-sample
 

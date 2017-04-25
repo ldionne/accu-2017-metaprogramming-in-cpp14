@@ -12,17 +12,17 @@ using namespace std::literals;
 
 int main() {
 // sample(mpl)
-constexpr auto Types = hana::tuple_t<int, void, char, long>;
+auto Types = hana::tuple_t<int, void, char, long, void>;
 
-constexpr auto NoVoid = hana::remove_if(Types, hana::traits::is_void);
-static_assert(NoVoid == hana::tuple_t<int, char, long>);
+auto NoVoid = hana::remove_if(Types, hana::traits::is_void);
+// -> hana::tuple_t<int, char, long>
 
-constexpr auto Ptrs = hana::transform(Types, hana::traits::add_pointer);
-static_assert(Ptrs == hana::tuple_t<int*, void*, char*, long*>);
+auto Ptrs = hana::transform(Types, hana::traits::add_pointer);
+// -> hana::tuple_t<int*, void*, char*, long*, void*>
 // end-sample
 
 
-// sample(fusion)
+// sample(fusion-tuple)
 // tuple
 auto tuple = hana::make_tuple(1, 2.2f, "hello"s, 3.4, 'x');
 auto no_floats = hana::remove_if(tuple, [](auto const& t) {
@@ -30,7 +30,9 @@ auto no_floats = hana::remove_if(tuple, [](auto const& t) {
 });
 
 assert(no_floats == hana::make_tuple(1, "hello"s, 'x'));
+// end-sample
 
+// sample(fusion-map)
 // map
 struct a; struct b; struct c;
 auto map = hana::make_map(
