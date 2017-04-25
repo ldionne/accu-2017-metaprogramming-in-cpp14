@@ -554,6 +554,85 @@ This is what I meant by "Seamless integration of compile-time and runtime"
 
 ### Hana shines when combining compile-time and runtime
 
+====================
+
+### Example: generating JSON using limited reflection
+
+```cpp
+Person joe{"Joe", 30};
+std::cout << to_json(hana::make_tuple(1, 'c', joe));
+```
+
+__Output__:
+```json
+[1, "c", {"name" : "Joe", "age" : 30}]
+```
+
+----
+
+### Define your type like this
+
+```cpp
+struct Person {
+  BOOST_HANA_DEFINE_STRUCT(Person,
+    (std::string, name),
+    (int, age)
+  );
+};
+```
+
+
+(non-intrusive version is `BOOST_HANA_ADAPT_STRUCT`)
+
+----
+
+### Handle base types
+
+```cpp
+std::string quote(std::string s) { return "\"" + s + "\""; }
+
+template <typename T>
+auto to_json(T const& x) -> decltype(std::to_string(x)) {
+  return std::to_string(x);
+}
+
+std::string to_json(char c) { return quote({c}); }
+std::string to_json(std::string s) { return quote(s); }
+```
+
+----
+
+### Handle `Sequences`
+
+```cpp
+template <typename Xs>
+  std::enable_if_t<hana::is_a<hana::Sequence, Xs>(),
+std::string> to_json(Xs const& xs) {
+  auto json = hana::transform(xs, [](auto const& x) {
+    return to_json(x);
+  });
+
+  return "[" + join(std::move(json), ", ") + "]";
+}
+```
+
+----
+
+### Handle `Structs`
+
+```cpp
+template <typename T>
+  std::enable_if_t<hana::is_a<hana::Struct, T>(),
+std::string> to_json(T const& x) {
+  auto json = hana::transform(keys(x), [&](auto name) {
+    auto const& member = hana::at_key(x, name);
+    return quote(name.c_str()) + " : " + to_json(member);
+  });
+
+  return "{" + join(std::move(json), ", ") + "}";
+}
+```
+
 ==============================================================================
 
 ## The future
@@ -654,6 +733,36 @@ constexpr std::vector<std:meta::type> sorted = sort_by_alignment(types);
 
 std::tuple<typename(sorted)...> tuple{...};
 ```
+
+====================
+
+### Steps to get there
+
+----
+
+### Expand constexpr evaluation to allow some allocations
+
+constexpr variable size sequences (basically `std::vector`)
+
+----
+
+### Create `std::meta::type` (or equivalent)
+
+- Basically compile-time RTTI
+- Pointer to an AST node inside the compiler
+
+----
+
+### Convert from `std::meta::type` to C++ type
+
+Allows influencing types in our program based on the result of type-level computations
+
+----
+
+### Unpack a constexpr sequence into a parameter pack
+
+- Gets us `std::tuple<typename(sorted)...>`
+- Technically not needed (could expand using `std::index_sequence`), but probably desirable
 
 ====================
 
