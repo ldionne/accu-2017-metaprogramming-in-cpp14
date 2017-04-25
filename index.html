@@ -702,19 +702,6 @@ https://a9.com/careers
                 ]
             });
 
-            // By marking a slide with <!-- .slide: data-state="ensure-sbs" -->,
-            // the presentation is re-scaled so that two side-by-side code
-            // snippets can fit. By using data-state="end-sbs", the
-            // presentation is scaled back to its original width.
-            // This is super hacky, but I suck at JavaScript.
-            Reveal.addEventListener('ensure-sbs', function() {
-              Reveal.configure({ width: '150%' });
-            }, false);
-
-            Reveal.addEventListener('end-sbs', function() {
-              Reveal.configure({ width: 960 });
-            }, false);
-
             // Slides marked with <!-- .slide: class="skip" --> will
             // be hidden from the presentation. This is handy for removing
             // material that I think I won't have time to cover, but without
