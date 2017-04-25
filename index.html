@@ -352,7 +352,107 @@ used at runtime (which is what we're interested in at the end).
 
 ====================
 
-### Let's consider a simple event system
+### Example: parser combinators
+
+<pre><code class='sample' sample='code/hana.parser.cpp#usage'></code></pre>
+
+----
+
+### Primer: compile-time type information
+
+<pre><code class='sample' sample='code/hana.typeid.cpp#usage'></code></pre>
+
+----
+
+### How that works
+
+<pre><code class='sample' sample='code/hana.typeid.cpp#how'></code></pre>
+
+----
+
+### Basic parser
+
+<pre><code class='sample' sample='code/hana.parser.cpp#parser'></code></pre>
+
+----
+
+### Literal parser
+
+<pre><code class='sample' sample='code/hana.parser.cpp#literal'></code></pre>
+
+----
+
+### Combining parsers
+
+<pre><code class='sample' sample='code/hana.parser.cpp#combine'></code></pre>
+
+====================
+
+### Example: dimensional analysis
+
+```c++
+double m = 10.3;  // mass in kg
+double d = 3.6;   // distance in meters
+double t = 2.4;   // time delta in seconds
+double v = d / t; // speed in m/s
+double a = ...;   // acceleration in m/s²
+
+double force = m * v; // What's wrong?
+```
+
+----
+
+### Solution: attach units to quantities
+
+<pre><code class='sample' sample='code/hana.dim.cpp#usage'></code></pre>
+
+----
+
+### Primer: Compile-time integers
+
+```c++
+auto three = 1 + 2;
+// -> int
+static_assert(three == 3);
+
+auto three = 1_c + 2_c;
+// -> integral_constant<int, 3>
+static_assert(three == 3_c);
+```
+
+----
+
+### How that works
+
+<pre><code class='sample' sample='code/hana.integral_constant.cpp#how'></code></pre>
+
+----
+
+### Representing quantities
+
+<pre><code class='sample' sample='code/hana.dim.cpp#quantity'></code></pre>
+
+----
+
+### Representing dimensions
+
+<pre><code class='sample' sample='code/hana.dim.cpp#dimensions'></code></pre>
+
+----
+
+### Catching errors
+
+<pre><code class='sample' sample='code/hana.dim.cpp#quantity-check'></code></pre>
+
+----
+
+### Composing dimensions
+
+<pre><code class='sample' sample='code/hana.dim.cpp#dimensions-compose'></code></pre>
+
+====================
+
+### Example: a simple event system
 
 <pre><code class='sample' sample='code/callbacks.std.unordered_map.cpp#usage'></code></pre>
 
@@ -453,106 +553,6 @@ This is what I meant by "Seamless integration of compile-time and runtime"
 ----
 
 ### Hana shines when combining compile-time and runtime
-
-====================
-
-### Example: parser combinators
-
-<pre><code class='sample' sample='code/hana.parser.cpp#usage'></code></pre>
-
-----
-
-### Primer: compile-time type information
-
-<pre><code class='sample' sample='code/hana.typeid.cpp#usage'></code></pre>
-
-----
-
-### How that works
-
-<pre><code class='sample' sample='code/hana.typeid.cpp#how'></code></pre>
-
-----
-
-### Basic parser
-
-<pre><code class='sample' sample='code/hana.parser.cpp#parser'></code></pre>
-
-----
-
-### Literal parser
-
-<pre><code class='sample' sample='code/hana.parser.cpp#literal'></code></pre>
-
-----
-
-### Combining parsers
-
-<pre><code class='sample' sample='code/hana.parser.cpp#combine'></code></pre>
-
-====================
-
-### Example: dimensional analysis
-
-```c++
-double m = 10.3;  // mass in kg
-double d = 3.6;   // distance in meters
-double t = 2.4;   // time delta in seconds
-double v = d / t; // speed in m/s
-double a = ...;   // acceleration in m/s²
-
-double force = m * v; // What's wrong?
-```
-
-----
-
-### Solution: attach units to quantities
-
-<pre><code class='sample' sample='code/hana.dim.cpp#usage'></code></pre>
-
-----
-
-### Primer: Compile-time integers
-
-```c++
-auto three = 1 + 2;
-// -> int
-static_assert(three == 3);
-
-auto three = 1_c + 2_c;
-// -> integral_constant<int, 3>
-static_assert(three == 3_c);
-```
-
-----
-
-### How that works
-
-<pre><code class='sample' sample='code/hana.integral_constant.cpp#how'></code></pre>
-
-----
-
-### Representing quantities
-
-<pre><code class='sample' sample='code/hana.dim.cpp#quantity'></code></pre>
-
-----
-
-### Representing dimensions
-
-<pre><code class='sample' sample='code/hana.dim.cpp#dimensions'></code></pre>
-
-----
-
-### Catching errors
-
-<pre><code class='sample' sample='code/hana.dim.cpp#quantity-check'></code></pre>
-
-----
-
-### Composing dimensions
-
-<pre><code class='sample' sample='code/hana.dim.cpp#dimensions-compose'></code></pre>
 
 ==============================================================================
 
