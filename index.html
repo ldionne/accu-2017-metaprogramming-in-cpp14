@@ -456,9 +456,39 @@ This is what I meant by "Seamless integration of compile-time and runtime"
 
 ====================
 
-### Another example: devirtualization
+### Another example: parser combinators
 
-TODO
+<pre><code class='sample' sample='code/hana.parser.cpp#usage'></code></pre>
+
+----
+
+### Primer: compile-time type information
+
+<pre><code class='sample' sample='code/hana.typeid.cpp#usage'></code></pre>
+
+----
+
+### How that works
+
+<pre><code class='sample' sample='code/hana.typeid.cpp#how'></code></pre>
+
+----
+
+### Basic parser
+
+<pre><code class='sample' sample='code/hana.parser.cpp#parser'></code></pre>
+
+----
+
+### Literal parser
+
+<pre><code class='sample' sample='code/hana.parser.cpp#literal'></code></pre>
+
+----
+
+### Combining parsers
+
+<pre><code class='sample' sample='code/hana.parser.cpp#combine'></code></pre>
 
 ==============================================================================
 
@@ -592,7 +622,7 @@ https://a9.com/careers
 
         <script>
             Reveal.initialize({
-                slideNumber: false, // 'c/t' -> useful when authoring to know how many slides there are
+                slideNumber: 'c/t', // 'c/t' -> useful when authoring to know how many slides there are
                 history: true,
                 transition: 'none',
 
