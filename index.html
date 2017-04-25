@@ -144,10 +144,8 @@ struct Typelist {
 };
 
 using Types = LOKI_TYPELIST_4(int, char, float, void);
-static_assert(std::is_same<
-    Loki::TL::TypeAt<Types, 2>::Result,
-    float
->{});
+using Second = Loki::TL::TypeAt<Types, 2>::Result;
+// -> float
 ```
 
 ----
@@ -158,8 +156,14 @@ static_assert(std::is_same<
 using Types = LOKI_TYPELIST_6(int, char, float, char, void, float);
 
 using NoChar = Loki::TL::EraseAll<Types, char>::Result;
+// -> LOKI_TYPELIST_4(int, float, void, float)
+
 using Uniqued = Loki::TL::NoDuplicates<Types>::Result;
+// -> LOKI_TYPELIST_4(int, char, float, void)
+
 using Reversed = Loki::TL::Reverse<Types>::Result;
+// -> LOKI_TYPELIST_6(float, void, char, float, char, int)
+
 // etc...
 ```
 
