@@ -456,7 +456,7 @@ This is what I meant by "Seamless integration of compile-time and runtime"
 
 ====================
 
-### Another example: parser combinators
+### Example: parser combinators
 
 <pre><code class='sample' sample='code/hana.parser.cpp#usage'></code></pre>
 
@@ -489,6 +489,70 @@ This is what I meant by "Seamless integration of compile-time and runtime"
 ### Combining parsers
 
 <pre><code class='sample' sample='code/hana.parser.cpp#combine'></code></pre>
+
+====================
+
+### Example: dimensional analysis
+
+```c++
+double m = 10.3;  // mass in kg
+double d = 3.6;   // distance in meters
+double t = 2.4;   // time delta in seconds
+double v = d / t; // speed in m/s
+double a = ...;   // acceleration in m/s²
+
+double force = m * v; // What's wrong?
+```
+
+----
+
+### Solution: attach units to quantities
+
+<pre><code class='sample' sample='code/hana.dim.cpp#usage'></code></pre>
+
+----
+
+### Primer: Compile-time integers
+
+```c++
+auto three = 1 + 2;
+// -> int
+static_assert(three == 3);
+
+auto three = 1_c + 2_c;
+// -> integral_constant<int, 3>
+static_assert(three == 3_c);
+```
+
+----
+
+### How that works
+
+<pre><code class='sample' sample='code/hana.integral_constant.cpp#how'></code></pre>
+
+----
+
+### Representing quantities
+
+<pre><code class='sample' sample='code/hana.dim.cpp#quantity'></code></pre>
+
+----
+
+### Representing dimensions
+
+<pre><code class='sample' sample='code/hana.dim.cpp#dimensions'></code></pre>
+
+----
+
+### Catching errors
+
+<pre><code class='sample' sample='code/hana.dim.cpp#quantity-check'></code></pre>
+
+----
+
+### Composing dimensions
+
+<pre><code class='sample' sample='code/hana.dim.cpp#dimensions-compose'></code></pre>
 
 ==============================================================================
 
