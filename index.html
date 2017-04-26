@@ -783,6 +783,153 @@ Allows influencing types in our program based on the result of type-level comput
 
 https://a9.com/careers
 
+==============================================================================
+
+## Bonus
+
+- Go interfaces
+- Haskell typeclasses
+- Rust traits
+- C++0x concept maps
+
+----
+
+### Name them however you'd like
+
+----
+
+```c++
+struct Square {
+  void draw(std::ostream& out) const { out << "Square"; }
+};
+
+struct Circle {
+  void draw(std::ostream& out) const { out << "Circle"; }
+};
+
+void f(drawable const& d) {
+  d.draw(std::cout);
+}
+
+f(Square{}); // prints "Square"
+f(Circle{}); // prints "Circle"
+```
+
+----
+
+### Define the interface
+
+```c++
+struct Drawable : decltype(dyno::requires(
+  "draw"_s = dyno::function<void (dyno::T const&, std::ostream&)>
+)) { };
+```
+
+----
+
+### Define how the interface is fulfilled
+
+```c++
+template <typename T>
+auto dyno::concept_map_for<Drawable, T> = dyno::make_concept_map(
+  "draw"_s = [](T const& self, std::ostream& out) { self.draw(out); }
+);
+```
+
+----
+
+### Define an wrapper for things that satisfy the concept
+
+```c++
+struct drawable {
+  template <typename T>
+  drawable(T x) : poly_{x} { }
+
+  void draw(std::ostream& out) const
+  { poly_.virtual_("draw"_s)(poly_, out); }
+
+private:
+  dyno::poly<Drawable> poly_;
+};
+```
+
+----
+
+### How does it work?
+
+----
+
+### It's simple
+### No, not really <!-- .element class="fragment" -->
+
+----
+
+### But bits of it are
+### How we create the vtable
+
+```c++
+struct Drawable : decltype(dyno::requires(
+  "draw"_s = dyno::function<void (dyno::T const&, std::ostream&)>
+)) { };
+```
+
+```c++
+template <typename ...Name, typename ...Signature>
+auto requires(hana::pair<Name, hana::type<Signature>> ...f)
+  -> hana::map<hana::pair<Name, Signature>...>
+;
+
+using VTable = decltype(requires(
+  hana::make_pair(
+    "draw"_s,
+    hana::type<void (void const*, std::ostream&)>{}
+  )
+));
+```
+
+----
+
+### How we fill it
+
+```c++
+template <typename T>
+auto dyno::concept_map_for<Drawable, T> = dyno::make_concept_map(
+  "draw"_s = [](T const& self, std::ostream& out) { self.draw(out); }
+);
+```
+
+```c++
+template <typename ...Name, typename ...Function>
+auto make_concept_map(hana::pair<Name, Function> ...f) {
+  return hana::make_map(f...);
+}
+
+template <typename T>
+auto functions = make_concept_map(
+  hana::make_pair(
+    "draw"_s,
+    [](T const& self, std::ostream& out) { self.draw(out); }
+  )
+);
+```
+
+----
+
+### How we bind the two together
+
+```c++
+struct drawable {
+  template <typename T>
+  drawable(T t) : vtable_{functions<T>}, ... { }
+
+  ...
+
+private:
+  VTable vtable_;
+  ...
+};
+```
+
                 </script>
                 </section>
             </div>
