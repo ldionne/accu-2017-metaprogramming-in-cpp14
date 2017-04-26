@@ -966,6 +966,10 @@ private:
               $(".slides .skip").each(function(index, slide) {
                 slide.remove();
               });
+              $("code").each(function(idx, div) {
+                console.log(div);
+                div.classList.add("line-numbers");
+              });
               Reveal.sync();
             });
         </script>

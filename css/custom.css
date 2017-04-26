@@ -8,6 +8,11 @@
     max-height: 550px;
 }
 
+/* And also wider */
+.reveal pre {
+  width: 100%;
+}
+
 /* Make it possible to have two columns */
 #left {
   left:-8.33%;
