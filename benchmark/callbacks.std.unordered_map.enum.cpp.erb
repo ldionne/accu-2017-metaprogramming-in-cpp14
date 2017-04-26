@@ -1,0 +1,79 @@
+// Copyright Louis Dionne 2016
+// Distributed under the Boost Software License, Version 1.0.
+
+
+#include <cassert>
+#include <functional>
+#include <initializer_list>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+
+enum class Event {
+  <%= (1..env[:maxn]).map { |i| "EVENT#{i}" }.join(',') %>
+};
+
+// sample(struct)
+struct event_system {
+  using Callback = std::function<void()>;
+  std::unordered_map<Event, std::vector<Callback>> map_;
+// end-sample
+
+// sample(constructor)
+explicit event_system(std::initializer_list<Event> events) {
+  for (auto event : events)
+    map_.insert({event, {}});
+}
+// end-sample
+
+// sample(on)
+template <typename F>
+void on(Event event, F callback) {
+  auto callbacks = map_.find(event);
+  assert(callbacks != map_.end() &&
+    "trying to add a callback to an unknown event");
+
+  callbacks->second.push_back(callback);
+}
+// end-sample
+
+// sample(trigger)
+void trigger(Event event) const {
+  auto callbacks = map_.find(event);
+  assert(callbacks != map_.end() &&
+    "trying to trigger an unknown event");
+
+  for (auto& callback : callbacks->second)
+    callback();
+}
+// end-sample
+};
+
+
+#include <string>
+using namespace std::literals;
+
+
+template <typename Events>
+__attribute__((noinline)) void loop(Events const& events) {
+  for (unsigned long long i = 0; i < <%= env[:iterations] %>; ++i) {
+    <% (1..n).each do |i| %>
+      events.trigger(Event::EVENT<%=i%>);
+    <% end %>
+  }
+}
+
+int main() {
+  event_system events{{
+    <%= (1..env[:maxn]).map { |i| "Event::EVENT#{i}" }.join(', ') %>
+  }};
+
+  <% (1..env[:maxn]).each do |i| %>
+    events.on(Event::EVENT<%=i%>, []{});
+  <% end %>
+
+#if defined(METABENCH)
+  loop(events);
+#endif
+}

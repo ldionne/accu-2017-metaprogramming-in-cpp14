@@ -107,7 +107,7 @@ add_custom_target(check ALL
 include(metabench)
 add_custom_target(benchmarks)
 
-foreach(target hana hana.runtime std.function std.unordered_map)
+foreach(target hana hana.runtime std.function std.unordered_map.string std.unordered_map.enum)
     metabench_add_dataset(benchmark.callbacks.${target}
         benchmark/callbacks.${target}.cpp.erb
         "[1, 2, 4, 6, 8, 10]"
@@ -119,14 +119,16 @@ endforeach()
 metabench_add_chart(benchmark.callbacks
     DATASETS benchmark.callbacks.hana
              benchmark.callbacks.std.function
-             benchmark.callbacks.std.unordered_map
+             benchmark.callbacks.std.unordered_map.string
+             benchmark.callbacks.std.unordered_map.enum
     ASPECT EXECUTION_TIME
     XLABEL "Number of events triggered (x 10M)"
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/benchmark/callbacks.html)
 
 metabench_add_chart(benchmark.callbacks.runtime
     DATASETS benchmark.callbacks.hana.runtime
-             benchmark.callbacks.std.unordered_map
+             benchmark.callbacks.std.unordered_map.string
+             benchmark.callbacks.std.unordered_map.enum
     ASPECT EXECUTION_TIME
     XLABEL "Number of events triggered (x 10M)"
     OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/benchmark/callbacks.runtime.html)

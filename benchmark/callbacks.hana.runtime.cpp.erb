@@ -5,14 +5,13 @@
 #include <string>
 namespace hana = boost::hana;
 using namespace hana::literals;
-using namespace std::literals;
 
 
 template <typename Events>
 __attribute__((noinline)) void loop(Events const& events) {
   for (unsigned long long i = 0; i < <%= env[:iterations] %>; ++i) {
     <% (1..n).each do |i| %>
-      events.trigger("event<%=i%>"s);
+      events.trigger(std::string{"event<%=i%>"});
     <% end %>
   }
 }
