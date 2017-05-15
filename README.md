@@ -4,7 +4,7 @@ This repository contains my [reveal.js][]-based presentation on metaprogramming
 for the [ACCU 2017][] conference.
 
 ## Basic usage
-Go to https://ldionne.com/accu-2017-metaprogramming-in-cpp14 or open
+Go to http://ldionne.com/accu-2017-metaprogramming-in-cpp14 or open
 `index.html` with your browser (does not work in Chrome). The slides
 are also available as a pdf in `slides.pdf`.
 
