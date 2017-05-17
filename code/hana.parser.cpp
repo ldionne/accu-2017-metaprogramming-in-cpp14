@@ -48,7 +48,7 @@ literal_parser lit(char c) { return {c}; }
 template <typename ...Parsers>
 auto combine_parsers(Parsers const& ...parsers) {
   return [=](std::istream& in) {
-    auto all = hana::make_tuple(parsers(in)...);
+    hana::parser<decltype(parsers(in))...> all{parsers(in)...};
     auto result = hana::remove_if(all, [](auto const& result) {
       return hana::typeid_(result) == hana::type<void_>{};
     });
