@@ -411,7 +411,7 @@ double force = m * v; // What's wrong?
 ### Primer: Compile-time integers
 
 ```c++
-auto three = 1 + 2;
+constexpr auto three = 1 + 2;
 // -> int
 static_assert(three == 3);
 
